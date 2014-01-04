@@ -1,6 +1,8 @@
 
 scalaVersion := "2.10.3"
 
+testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-oF")
+
 libraryDependencies ++=
   Seq(
     "org.scalaz" %% "scalaz-core" % "7.0.5",

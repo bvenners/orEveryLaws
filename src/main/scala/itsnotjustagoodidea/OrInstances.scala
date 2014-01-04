@@ -120,9 +120,60 @@ sealed abstract class OrInstances2 extends OrInstances3 {
 */
 
 trait OrInstances2 { // extends OrInstances3 {
+
   implicit def orMonad[B]: Monad[({type l[g]=g Or B})#l] = new Monad[({type l[g]=g Or B})#l] {
     def point[G](g: => G) = Good(g)
     def bind[G, H](fa: G Or B)(f: G => H Or B) = fa flatMap f
+  }
+
+  implicit def orInstances2[B]: Traverse[({type l[g] = g Or B})#l] with Monad[({type l[g] = g Or B})#l] with Cozip[({type l[g] = g Or B})#l] with Plus[({type l[g] = g Or B})#l] = new Traverse[({type l[g] = g Or B})#l] with Monad[({type l[g] = g Or B})#l] with Cozip[({type l[g] = g Or B})#l] with Plus[({type l[g] = g Or B})#l] {
+
+/*
+    override def map[G, H](fa: G Or B)(f: G => H) =
+      fa map f
+*/
+
+    def bind[G, H](fa: G Or B)(f: G => H Or B) =
+      fa flatMap f
+
+    def point[G](g: => G) =
+      Good(g)
+
+    def traverseImpl[Z[_] : Applicative, G, Y](fa: G Or B)(f: G => Z[Y]): Z[Y Or B] = 
+      fa match {
+        case Bad(b) => Applicative[Z].point(Good[Y].orBad(b)) 
+        case Good(g) => Functor[Z].map(f(g))(Good(_))
+      }
+
+    override def foldRight[G, C](fa: G Or B, z: => C)(f: (G, => C) => C) =
+      fa.foldRight(z)(f)
+
+    // def cozip[C, G](x: F[C \/ G]): (F[C] \/ F[G])
+    def cozip[C, G](x: (C \/ G) Or B): ((C Or B) \/ (G Or B)) =  ???
+/*
+      x match {
+        case b @ Bad(_) => Bad(b)
+        case Good(e) => e match {
+          case Bad(a) => Bad(Good(a))
+          case b @ Good(_) => Good(b)
+          case -\/(c) => Bad(\/-(c))
+          case b @ \/-(_) => \/-(b)
+        }
+      }
+
+def cozip[A, B](x: F[A \/ B]): (F[A] \/ F[B])
+    def cozip[A, B](x: L \/ (A \/ B)) =
+      x match {
+        case l @ -\/(_) => -\/(l)
+        case \/-(e) => e match {
+          case -\/(a) => -\/(\/-(a))
+          case b @ \/-(_) => \/-(b)
+        }
+      }
+*/
+
+    def plus[G](a: G Or B, b: => G Or B) =
+      a orElse b
   }
 }
 
