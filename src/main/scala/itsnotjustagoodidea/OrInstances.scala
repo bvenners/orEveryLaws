@@ -1,4 +1,3 @@
-
 package itsnotjustagoodidea // it's the law!
 
 import scalaz._
