@@ -119,7 +119,23 @@ sealed abstract class OrInstances2 extends OrInstances3 {
 }
 */
 
-trait OrInstances2 { // extends OrInstances3 {
+trait OrInstances3 {
+  implicit val orInstances3 : Bitraverse[Or] = new Bitraverse[Or] {
+    override def bimap[G, B, H, C](gorb: G Or B)(gf: G => H, bf: B => C): H Or C =
+      gorb match {
+        case Good(a) => Good(gf(a))
+        case Bad(b) => Bad(bf(b))
+      }
+
+    def bitraverseImpl[Z[_] : Applicative, G, B, H, C](gorb: G Or B)(gf: G => Z[H], bf: B => Z[C]) =
+      gorb match {
+        case Good(g) => Functor[Z].map(gf(g))(Good(_))
+        case Bad(b) => Functor[Z].map(bf(b))(Bad(_))
+      }
+  }
+}
+
+trait OrInstances2 extends OrInstances3 {
 
   implicit def orMonad[B]: Monad[({type l[g]=g Or B})#l] = new Monad[({type l[g]=g Or B})#l] {
     def point[G](g: => G) = Good(g)

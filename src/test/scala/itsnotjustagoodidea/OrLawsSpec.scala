@@ -14,20 +14,20 @@ import Arbitrary.arbitrary
 
 class OrLawsSpec extends PropSpec with Checkers {
 
-  def checkAll(props: Properties) {
-    for ((name, prop) <- props.properties) yield {
-      property(name) { check(prop) }
+  def checkAll(prefix: String, props: Properties) {
+    for (((name, prop), idx) <- props.properties.zipWithIndex) {
+      property(prefix + idx + ": " + name) { check(prop) }
     }
   }
 
   implicit def orArbitrary[G, B](implicit ag: Arbitrary[G], ab: Arbitrary[B]): Arbitrary[G Or B] =
     Arbitrary(oneOf(arbitrary[G].map(Good(_)), arbitrary[B].map(Bad(_))))
 
-  checkAll(order.laws[Int Or Int])
-  checkAll(monoid.laws[Int Or Int])
-  checkAll(monad.laws[({type l[g] = g Or Int})#l])
-  checkAll(plus.laws[({type l[g] = g Or Int})#l])
-  checkAll(traverse.laws[({type l[g] = g Or Int})#l])
-  // checkAll(bitraverse.laws[\/])
+  checkAll("order", order.laws[Int Or Int])
+  checkAll("monoid", monoid.laws[Int Or Int])
+  checkAll("monad", monad.laws[({type l[g] = g Or Int})#l])
+  checkAll("plus", plus.laws[({type l[g] = g Or Int})#l])
+  checkAll("traverse", traverse.laws[({type l[g] = g Or Int})#l])
+  checkAll("bitraverse", bitraverse.laws[Or])
 }
 
