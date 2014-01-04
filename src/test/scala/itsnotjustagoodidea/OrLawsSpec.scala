@@ -29,5 +29,6 @@ class OrLawsSpec extends PropSpec with Checkers {
   checkAll("plus", plus.laws[({type l[g] = g Or Int})#l])
   checkAll("traverse", traverse.laws[({type l[g] = g Or Int})#l])
   checkAll("bitraverse", bitraverse.laws[Or])
+  checkAll("applicative", applicative.laws[({type l[g] = g Or Int})#l])
 }
 
