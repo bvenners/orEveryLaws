@@ -23,6 +23,11 @@ class OrLawsSpec extends PropSpec with Checkers {
   implicit def orArbitrary[G, B](implicit ag: Arbitrary[G], ab: Arbitrary[B]): Arbitrary[G Or B] =
     Arbitrary(oneOf(arbitrary[G].map(Good(_)), arbitrary[B].map(Bad(_))))
 
+  checkAll(order.laws[Int Or Int])
+  checkAll(monoid.laws[Int Or Int])
   checkAll(monad.laws[({type l[g] = g Or Int})#l])
+  //checkAll(plus.laws[({type l[g] = g Or Int})#l])
+  //checkAll(traverse.laws[({type l[g] = g Or Int})#l])
+  // checkAll(bitraverse.laws[\/])
 }
 
