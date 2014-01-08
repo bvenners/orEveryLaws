@@ -22,20 +22,7 @@ trait OrInstances3 {
 
 trait OrInstances2 extends OrInstances3 {
 
-/*
-  implicit def orMonad[B]: Monad[({type l[g]=g Or B})#l] = new Monad[({type l[g]=g Or B})#l] {
-    def point[G](g: => G) = Good(g)
-    def bind[G, H](fa: G Or B)(f: G => H Or B) = fa flatMap f
-    override def toString = "the monad one"
-  }
-*/
-
   implicit def orInstances2[B]: Traverse[({type l[g] = g Or B})#l] with Monad[({type l[g] = g Or B})#l] with Cozip[({type l[g] = g Or B})#l] with Plus[({type l[g] = g Or B})#l] = new Traverse[({type l[g] = g Or B})#l] with Monad[({type l[g] = g Or B})#l] with Cozip[({type l[g] = g Or B})#l] with Plus[({type l[g] = g Or B})#l] {
-
-/*
-    override def map[G, H](fa: G Or B)(f: G => H) =
-      fa map f
-*/
 
     def bind[G, H](fa: G Or B)(f: G => H Or B) =
       fa flatMap f

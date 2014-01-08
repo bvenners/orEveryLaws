@@ -188,5 +188,14 @@ class OrExampleSpec extends WordSpec with Matchers {
       }
     }
   }
+  "An Every" when {
+     "used to accumulate errors" can {
+       "be transformed to any other desired type at the end of the day" in {
+         val result = Good[Person].orBad(Many("\"\" is not a valid name", "\"\" is not a valid integer"))
+         result.badMap(_.mkString) shouldEqual Bad("\"\" is not a valid name\"\" is not a valid integer")
+         result.badMap(_.toList) shouldEqual Bad(List("\"\" is not a valid name","\"\" is not a valid integer"))  
+       }
+     }
+   }
 }
 
