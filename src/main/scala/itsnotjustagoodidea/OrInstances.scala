@@ -22,10 +22,13 @@ trait OrInstances3 {
 
 trait OrInstances2 extends OrInstances3 {
 
+/*
   implicit def orMonad[B]: Monad[({type l[g]=g Or B})#l] = new Monad[({type l[g]=g Or B})#l] {
     def point[G](g: => G) = Good(g)
     def bind[G, H](fa: G Or B)(f: G => H Or B) = fa flatMap f
+    override def toString = "the monad one"
   }
+*/
 
   implicit def orInstances2[B]: Traverse[({type l[g] = g Or B})#l] with Monad[({type l[g] = g Or B})#l] with Cozip[({type l[g] = g Or B})#l] with Plus[({type l[g] = g Or B})#l] = new Traverse[({type l[g] = g Or B})#l] with Monad[({type l[g] = g Or B})#l] with Cozip[({type l[g] = g Or B})#l] with Plus[({type l[g] = g Or B})#l] {
 
@@ -64,6 +67,8 @@ trait OrInstances2 extends OrInstances3 {
 
     def plus[G](a: G Or B, b: => G Or B) =
       a orElse b
+
+    override def toString = "the other monad one"
   }
 }
 
@@ -140,6 +145,24 @@ trait OrInstances extends OrInstances0 {
           case (Bad(b1), Bad(b2)) => Bad(b1 ++ b2)
         }
     }
+
+  def accumulatingOrApplicativeForSemigroup[B : Semigroup]: Applicative[({type l[g] = g Or B})#l] =
+    new Applicative[({type l[g] = g Or B})#l] {
+      override def map[G, H](fa: G Or B)(f: G => H) = fa map f
+  
+      def point[G](g: => G) = Good(g)
+ 
+      def ap[G, H](fa: => G Or B)(f: => ((G => H) Or B)): H Or B =
+        (fa, f) match {
+          case (Good(g), Good(f)) => Good(f(g))
+          case (Bad(b), Good(_)) => Bad(b)
+          case (Good(f), Bad(b)) => Bad(b)
+          case (Bad(b1), Bad(b2)) => Bad(Semigroup[B].append(b1, b2))
+        }
+
+      override def toString = "my applicative"
+    }
+
 }
 
 object OrInstances extends OrInstances
