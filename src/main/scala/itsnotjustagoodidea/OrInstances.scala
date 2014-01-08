@@ -126,7 +126,7 @@ trait OrInstances extends OrInstances0 {
     def badMap[C](bToC: B => C): G Or C = or.swap.map(bToC).swap
   }
 
-  implicit def accumulatingOrApplicative[G, B, E[b] <: Every[b]]: Applicative[({type l[g] = g Or Every[B]})#l] =
+  implicit def accumulatingOrApplicative[G, B]: Applicative[({type l[g] = g Or Every[B]})#l] =
     new Applicative[({type l[g] = g Or Every[B]})#l] {
       override def map[G, H](fa: G Or Every[B])(f: G => H) = fa map f
   

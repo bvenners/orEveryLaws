@@ -1,7 +1,7 @@
 
 scalaVersion := "2.10.3"
 
-testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-oF")
+testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-oS")
 
 libraryDependencies ++=
   Seq(
