@@ -1,3 +1,18 @@
+/*
+ * Copyright 2014 Artima, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package itsnotjustagoodidea // It's the law!
 
 import scalaz._
@@ -13,7 +28,7 @@ class OrExampleSpec extends UnitSpec {
 
   "An Or" when {
 
-    "accumulating (i.e., its Bad type is an Every)" should {
+    "its Bad type is an Every" should {
 
       def parseName(input: String): String Or Every[ErrorMessage] = {
         val trimmed = input.trim
@@ -42,9 +57,10 @@ class OrExampleSpec extends UnitSpec {
         parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
         parsePerson("Bridget Jones", "") shouldEqual Bad(One("\"\" is not a valid integer"))
         parsePerson("Bridget Jones", "-29") shouldEqual Bad(One("\"-29\" is not a valid age"))
-        parsePerson("", "") shouldEqual Bad(Many("\"\" is not a valid name", "\"\" is not a valid integer"))
+        parsePerson("", "") shouldEqual Bad(Many("\"\" is not a valid name", "\"\" is not a valid integer")) // accumulated here
       }
-      "by default do short-circuting, monad-like behavior with Scalaz's applicative syntax" in {
+
+      "by default exhibit short-circuting, monad-like behavior with Scalaz's applicative syntax" in {
      
         def parsePerson(inputName: String, inputAge: String): Person Or Every[ErrorMessage] = {
           val name = parseName(inputName)
@@ -55,9 +71,10 @@ class OrExampleSpec extends UnitSpec {
         parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
         parsePerson("Bridget Jones", "") shouldEqual Bad(One("\"\" is not a valid integer"))
         parsePerson("Bridget Jones", "-29") shouldEqual Bad(One("\"-29\" is not a valid age"))
-        parsePerson("", "") shouldEqual Bad(One("\"\" is not a valid name")) // My but aren't we in a monadic mood today!
+        parsePerson("", "") shouldEqual Bad(One("\"\" is not a valid name")) // Short circuited here
       }
-      "be able to accumulate with Scalaz's applicative syntax" in {
+
+      "be able to accumulate with Scalaz's applicative syntax via an alternate personality" in {
 
         implicit def personality[G, B] = AccumulatingOr.applicativeForEvery[G, B]
 
@@ -70,7 +87,7 @@ class OrExampleSpec extends UnitSpec {
         parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
         parsePerson("Bridget Jones", "") shouldEqual Bad(One("\"\" is not a valid integer"))
         parsePerson("Bridget Jones", "-29") shouldEqual Bad(One("\"-29\" is not a valid age"))
-        parsePerson("", "") shouldEqual Bad(Many("\"\" is not a valid integer", "\"\" is not a valid name"))
+        parsePerson("", "") shouldEqual Bad(Many("\"\" is not a valid integer", "\"\" is not a valid name")) // accumulated here
       }
     }
 
@@ -91,7 +108,7 @@ class OrExampleSpec extends UnitSpec {
         }
       }
 
-      "by default do short-circuting, monad-like behavior with Scalaz's applicative syntax" in {
+      "by default exhibit short-circuting, monad-like behavior with Scalaz's applicative syntax" in {
      
         def parsePerson(inputName: String, inputAge: String): Person Or NonEmptyList[String] = {
           val name = parseName(inputName)
@@ -102,10 +119,10 @@ class OrExampleSpec extends UnitSpec {
         parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
         parsePerson("Bridget Jones", "") shouldEqual Bad(NonEmptyList("\"\" is not a valid integer"))
         parsePerson("Bridget Jones", "-29") shouldEqual Bad(NonEmptyList("\"-29\" is not a valid age"))
-        parsePerson("", "") shouldEqual Bad(NonEmptyList("\"\" is not a valid name"))
+        parsePerson("", "") shouldEqual Bad(NonEmptyList("\"\" is not a valid name")) // Short circuited here
       }
 
-      "be able to accumulate with Scalaz's applicative syntax with the right stimulus" in {
+      "be able to accumulate with Scalaz's applicative syntax via an alternate personality" in {
      
         implicit def personality = AccumulatingOr.applicativeFor[NonEmptyList[String]]
 
@@ -118,7 +135,7 @@ class OrExampleSpec extends UnitSpec {
         parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
         parsePerson("Bridget Jones", "") shouldEqual Bad(NonEmptyList("\"\" is not a valid integer"))
         parsePerson("Bridget Jones", "-29") shouldEqual Bad(NonEmptyList("\"-29\" is not a valid age"))
-        parsePerson("", "") shouldEqual Bad(NonEmptyList("\"\" is not a valid integer", "\"\" is not a valid name"))
+        parsePerson("", "") shouldEqual Bad(NonEmptyList("\"\" is not a valid integer", "\"\" is not a valid name")) // accumulated here
       }
     }
 
@@ -139,7 +156,7 @@ class OrExampleSpec extends UnitSpec {
         }
       }
 
-      "by default do short-circuting, monad-like behavior with Scalaz's applicative syntax" in {
+      "by default exhibit short-circuting, monad-like behavior with Scalaz's applicative syntax" in {
      
         def parsePerson(inputName: String, inputAge: String): Person Or ErrorMessage = {
           val name = parseName(inputName)
@@ -150,10 +167,10 @@ class OrExampleSpec extends UnitSpec {
         parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
         parsePerson("Bridget Jones", "") shouldEqual Bad("\"\" is not a valid integer")
         parsePerson("Bridget Jones", "-29") shouldEqual Bad("\"-29\" is not a valid age")
-        parsePerson("", "") shouldEqual Bad("\"\" is not a valid name")
+        parsePerson("", "") shouldEqual Bad("\"\" is not a valid name") // Short circuited here
       }
 
-      "be able to accumulate with Scalaz's applicative syntax with the right stimulus" in {
+      "be able to accumulate with Scalaz's applicative syntax via an alternate personality" in {
      
         implicit def personality = AccumulatingOr.applicativeFor[String]
 
@@ -166,7 +183,7 @@ class OrExampleSpec extends UnitSpec {
         parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
         parsePerson("Bridget Jones", "") shouldEqual Bad("\"\" is not a valid integer")
         parsePerson("Bridget Jones", "-29") shouldEqual Bad("\"-29\" is not a valid age")
-        parsePerson("", "") shouldEqual Bad("\"\" is not a valid integer\"\" is not a valid name")
+        parsePerson("", "") shouldEqual Bad("\"\" is not a valid integer\"\" is not a valid name") // accumulated here
       }
     }
     "its Bad type is List[String]" should {
@@ -186,7 +203,7 @@ class OrExampleSpec extends UnitSpec {
         }
       }
 
-      "by default do short-circuting, monad-like behavior with Scalaz's applicative syntax" in {
+      "by default exhibit short-circuting, monad-like behavior with Scalaz's applicative syntax" in {
      
         def parsePerson(inputName: String, inputAge: String): Person Or List[ErrorMessage] = {
           val name = parseName(inputName)
@@ -197,10 +214,10 @@ class OrExampleSpec extends UnitSpec {
         parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
         parsePerson("Bridget Jones", "") shouldEqual Bad(List("\"\" is not a valid integer"))
         parsePerson("Bridget Jones", "-29") shouldEqual Bad(List("\"-29\" is not a valid age"))
-        parsePerson("", "") shouldEqual Bad(List("\"\" is not a valid name"))
+        parsePerson("", "") shouldEqual Bad(List("\"\" is not a valid name")) // Short circuited here
       }
 
-      "be able to accumulate with Scalaz's applicative syntax with the right stimulus" in {
+      "be able to accumulate with Scalaz's applicative syntax via an alternate personality" in {
      
         implicit def personality = AccumulatingOr.applicativeFor[List[String]]
 
@@ -213,10 +230,10 @@ class OrExampleSpec extends UnitSpec {
         parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
         parsePerson("Bridget Jones", "") shouldEqual Bad(List("\"\" is not a valid integer"))
         parsePerson("Bridget Jones", "-29") shouldEqual Bad(List("\"-29\" is not a valid age"))
-        parsePerson("", "") shouldEqual Bad(List("\"\" is not a valid integer", "\"\" is not a valid name"))
+        parsePerson("", "") shouldEqual Bad(List("\"\" is not a valid integer", "\"\" is not a valid name")) // accumulated here
       }
 
-      "be able to accumulate with Scalaz's applicative syntax as a Semigroup" in {
+      "be able to accumulate with Scalaz's applicative syntax as a Semigroup via an alternate personality" in {
      
         implicit def personality[B: Semigroup] = AccumulatingOr.applicativeFor[B]
 
@@ -229,10 +246,11 @@ class OrExampleSpec extends UnitSpec {
         parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
         parsePerson("Bridget Jones", "") shouldEqual Bad(List("\"\" is not a valid integer"))
         parsePerson("Bridget Jones", "-29") shouldEqual Bad(List("\"-29\" is not a valid age"))
-        parsePerson("", "") shouldEqual Bad(List("\"\" is not a valid integer", "\"\" is not a valid name"))
+        parsePerson("", "") shouldEqual Bad(List("\"\" is not a valid integer", "\"\" is not a valid name")) // accumulated here
       }
     }
   }
+
   "An Every" when {
      "used to accumulate errors" can {
        "be transformed to any other desired type at the end of the day" in {
