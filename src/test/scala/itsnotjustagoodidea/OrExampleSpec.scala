@@ -22,6 +22,15 @@ import org.scalautils._
 import org.scalautils.One
 import OrInstances._
 
+//
+// This test suite demonstrates ScalaUtils' Or acting alternatively as a
+// monad and an accumulating applicative, both via its built-in syntax
+// and throgh Scalaz's Monad and Applicative typeclasses. We demonstrate it
+// short-circuiting (like a monad) and accumulating with Every, NonEmptyList,
+// String, and List[String]. It's behavior defaults to monadic, but its
+// latent accumulating applicative personality can be broght to the fore 
+// with a one-line implicit definition.
+// 
 class OrExampleSpec extends UnitSpec {
 
   case class Person(name: String, age: Int)
@@ -46,6 +55,8 @@ class OrExampleSpec extends UnitSpec {
       }
 
       "accumulate with built-in syntax" in {
+
+        // import ScalaUtils' accumulation API (doesn't require applicatives)
         import Accumulation._
   
         def parsePerson(inputName: String, inputAge: String): Person Or Every[ErrorMessage] = {
@@ -65,7 +76,7 @@ class OrExampleSpec extends UnitSpec {
         def parsePerson(inputName: String, inputAge: String): Person Or Every[ErrorMessage] = {
           val name = parseName(inputName)
           val age = parseAge(inputAge)
-          (name |@| age){ Person(_, _) }
+          (name |@| age){ Person(_, _) } // Works because we imported OrInstances._ above
         }
   
         parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
@@ -76,6 +87,7 @@ class OrExampleSpec extends UnitSpec {
 
       "be able to accumulate with Scalaz's applicative syntax via an alternate personality" in {
 
+        // Hide the monadic personality and establish the accumulating personality with one line
         implicit def personality[G, B] = AccumulatingOr.applicativeForEvery[G, B]
 
         def parsePerson(inputName: String, inputAge: String): Person Or Every[ErrorMessage] = {
@@ -124,6 +136,7 @@ class OrExampleSpec extends UnitSpec {
 
       "be able to accumulate with Scalaz's applicative syntax via an alternate personality" in {
      
+        // Hide the monadic personality and establish the accumulating personality with one line
         implicit def personality = AccumulatingOr.applicativeFor[NonEmptyList[String]]
 
         def parsePerson(inputName: String, inputAge: String): Person Or NonEmptyList[String] = {
@@ -172,6 +185,7 @@ class OrExampleSpec extends UnitSpec {
 
       "be able to accumulate with Scalaz's applicative syntax via an alternate personality" in {
      
+        // Hide the monadic personality and establish the accumulating personality with one line
         implicit def personality = AccumulatingOr.applicativeFor[String]
 
         def parsePerson(inputName: String, inputAge: String): Person Or ErrorMessage = {
@@ -219,6 +233,7 @@ class OrExampleSpec extends UnitSpec {
 
       "be able to accumulate with Scalaz's applicative syntax via an alternate personality" in {
      
+        // Hide the monadic personality and establish the accumulating personality with one line
         implicit def personality = AccumulatingOr.applicativeFor[List[String]]
 
         def parsePerson(inputName: String, inputAge: String): Person Or List[ErrorMessage] = {
@@ -235,6 +250,12 @@ class OrExampleSpec extends UnitSpec {
 
       "be able to accumulate with Scalaz's applicative syntax as a Semigroup via an alternate personality" in {
      
+        // Hide the monadic personality and establish the accumulating personality with one line
+        // This shows you can accumulate any Semigroup with one import, like the behavior of Scalaz's Validation
+        // I actually think this is a bad idea, though, because it is less obvious what types will accumulate.
+        // Better to just turn on the accumulating personality for the specific type into which you want to
+        // accumulate, as I did in the other examples, but this example shows it is possible to
+        // be more general.
         implicit def personality[B: Semigroup] = AccumulatingOr.applicativeFor[B]
 
         def parsePerson(inputName: String, inputAge: String): Person Or List[ErrorMessage] = {
@@ -251,10 +272,14 @@ class OrExampleSpec extends UnitSpec {
     }
   }
 
+  // This demonstrates that the other forms we accumulated into above through applicative can be produced
+  // using ScalaUtils' built-in accumulation behavior by accumulating into Every, then "bad mapping" the result
+  // into the desired type.
   "An Every" when {
      "used to accumulate errors" can {
        "be transformed to any other desired type at the end of the day" in {
-         val result = Good[Person].orBad(Many("\"\" is not a valid name", "\"\" is not a valid integer"))
+         val result = Good[Person].orBad(Every("\"\" is not a valid name", "\"\" is not a valid integer"))
+         result.badMap(every => NonEmptyList(every.head, every.tail: _*)) shouldEqual Bad(NonEmptyList("\"\" is not a valid name", "\"\" is not a valid integer"))
          result.badMap(_.mkString) shouldEqual Bad("\"\" is not a valid name\"\" is not a valid integer")
          result.badMap(_.toList) shouldEqual Bad(List("\"\" is not a valid name","\"\" is not a valid integer"))  
        }
