@@ -7,7 +7,7 @@ import org.scalautils._
 import org.scalautils.One
 import OrInstances._
 
-class OrExampleSpec extends WordSpec with Matchers {
+class OrExampleSpec extends UnitSpec {
 
   case class Person(name: String, age: Int)
 
