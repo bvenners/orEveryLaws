@@ -9,7 +9,7 @@ trait AccumulatingOr {
 
   trait MoreSpecificApplicative[T[_]] extends Applicative[T]
 
-  implicit def forEvery[G, B]: MoreSpecificApplicative[({type l[g] = g Or Every[B]})#l] =
+  implicit def applicativeForEvery[G, B]: MoreSpecificApplicative[({type l[g] = g Or Every[B]})#l] =
     new MoreSpecificApplicative[({type l[g] = g Or Every[B]})#l] {
       override def map[G, H](fa: G Or Every[B])(f: G => H) = fa map f
   
@@ -24,7 +24,7 @@ trait AccumulatingOr {
         }
     }
 
-  def accumulatingOrApplicativeForSemigroup[B : Semigroup]: Applicative[({type l[g] = g Or B})#l] =
+  def applicativeFor[B : Semigroup]: Applicative[({type l[g] = g Or B})#l] =
     new Applicative[({type l[g] = g Or B})#l] {
       override def map[G, H](fa: G Or B)(f: G => H) = fa map f
   

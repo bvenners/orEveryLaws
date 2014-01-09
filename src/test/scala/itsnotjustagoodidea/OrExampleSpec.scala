@@ -59,7 +59,7 @@ class OrExampleSpec extends UnitSpec {
       }
       "be able to accumulate with Scalaz's applicative syntax" in {
 
-        implicit def personality[G, B] = AccumulatingOr.forEvery[G, B]
+        implicit def personality[G, B] = AccumulatingOr.applicativeForEvery[G, B]
 
         def parsePerson(inputName: String, inputAge: String): Person Or Every[ErrorMessage] = {
           val name = parseName(inputName)
@@ -107,7 +107,7 @@ class OrExampleSpec extends UnitSpec {
 
       "be able to accumulate with Scalaz's applicative syntax with the right stimulus" in {
      
-        implicit def personality = AccumulatingOr.accumulatingOrApplicativeForSemigroup[String]
+        implicit def personality = AccumulatingOr.applicativeFor[String]
 
         def parsePerson(inputName: String, inputAge: String): Person Or ErrorMessage = {
           val name = parseName(inputName)
@@ -154,7 +154,7 @@ class OrExampleSpec extends UnitSpec {
 
       "be able to accumulate with Scalaz's applicative syntax with the right stimulus" in {
      
-        implicit def personality = AccumulatingOr.accumulatingOrApplicativeForSemigroup[List[String]]
+        implicit def personality = AccumulatingOr.applicativeFor[List[String]]
 
         def parsePerson(inputName: String, inputAge: String): Person Or List[ErrorMessage] = {
           val name = parseName(inputName)
@@ -170,7 +170,7 @@ class OrExampleSpec extends UnitSpec {
 
       "be able to accumulate with Scalaz's applicative syntax as a Semigroup" in {
      
-        implicit def personality[B: Semigroup] = AccumulatingOr.accumulatingOrApplicativeForSemigroup[B]
+        implicit def personality[B: Semigroup] = AccumulatingOr.applicativeFor[B]
 
         def parsePerson(inputName: String, inputAge: String): Person Or List[ErrorMessage] = {
           val name = parseName(inputName)
