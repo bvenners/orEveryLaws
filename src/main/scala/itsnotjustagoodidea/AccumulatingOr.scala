@@ -22,10 +22,8 @@ import org.scalautils._
 
 trait AccumulatingOr {
 
-  trait MoreSpecificApplicative[T[_]] extends Applicative[T]
-
-  implicit def applicativeForEvery[G, B]: MoreSpecificApplicative[({type l[g] = g Or Every[B]})#l] =
-    new MoreSpecificApplicative[({type l[g] = g Or Every[B]})#l] {
+  implicit def applicativeForEvery[G, B]: Applicative[({type l[g] = g Or Every[B]})#l] =
+    new Applicative[({type l[g] = g Or Every[B]})#l] {
       override def map[G, H](fa: G Or Every[B])(f: G => H) = fa map f
   
       def point[G](g: => G) = Good(g)
