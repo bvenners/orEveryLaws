@@ -74,6 +74,54 @@ class OrExampleSpec extends UnitSpec {
       }
     }
 
+    "its Bad type is NonEmptyList[String]" should {
+
+      def parseName(input: String): String Or NonEmptyList[String] = {
+        val trimmed = input.trim
+        if (!trimmed.isEmpty) Good(trimmed) else Bad(NonEmptyList(s""""${input}" is not a valid name"""))
+      }
+
+      def parseAge(input: String): Int Or NonEmptyList[String] = {
+        try {
+          val age = input.trim.toInt
+          if (age >= 0) Good(age) else Bad(NonEmptyList(s""""${age}" is not a valid age"""))
+        }
+        catch {
+          case _: NumberFormatException => Bad(NonEmptyList(s""""${input}" is not a valid integer"""))
+        }
+      }
+
+      "by default do short-circuting, monad-like behavior with Scalaz's applicative syntax" in {
+     
+        def parsePerson(inputName: String, inputAge: String): Person Or NonEmptyList[String] = {
+          val name = parseName(inputName)
+          val age = parseAge(inputAge)
+          (name |@| age){ Person(_, _) }
+        }
+  
+        parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
+        parsePerson("Bridget Jones", "") shouldEqual Bad(NonEmptyList("\"\" is not a valid integer"))
+        parsePerson("Bridget Jones", "-29") shouldEqual Bad(NonEmptyList("\"-29\" is not a valid age"))
+        parsePerson("", "") shouldEqual Bad(NonEmptyList("\"\" is not a valid name"))
+      }
+
+      "be able to accumulate with Scalaz's applicative syntax with the right stimulus" in {
+     
+        implicit def personality = AccumulatingOr.applicativeFor[NonEmptyList[String]]
+
+        def parsePerson(inputName: String, inputAge: String): Person Or NonEmptyList[String] = {
+          val name = parseName(inputName)
+          val age = parseAge(inputAge)
+          (name |@| age){ Person(_, _) }
+        }
+  
+        parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
+        parsePerson("Bridget Jones", "") shouldEqual Bad(NonEmptyList("\"\" is not a valid integer"))
+        parsePerson("Bridget Jones", "-29") shouldEqual Bad(NonEmptyList("\"-29\" is not a valid age"))
+        parsePerson("", "") shouldEqual Bad(NonEmptyList("\"\" is not a valid integer", "\"\" is not a valid name"))
+      }
+    }
+
     "its Bad type is String" should {
 
       def parseName(input: String): String Or ErrorMessage = {
