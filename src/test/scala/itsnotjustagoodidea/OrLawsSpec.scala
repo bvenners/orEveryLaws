@@ -12,13 +12,7 @@ import OrInstances._
 import Gen.oneOf
 import Arbitrary.arbitrary
 
-class OrLawsSpec extends PropSpec with Checkers {
-
-  def checkAll(prefix: String, props: Properties) {
-    for (((name, prop), idx) <- props.properties.zipWithIndex) {
-      property(prefix + idx + ": " + name) { check(prop) }
-    }
-  }
+class OrLawsSpec extends LawsSpec {
 
   implicit def orArbitrary[G, B](implicit ag: Arbitrary[G], ab: Arbitrary[B]): Arbitrary[G Or B] =
     Arbitrary(oneOf(arbitrary[G].map(Good(_)), arbitrary[B].map(Bad(_))))

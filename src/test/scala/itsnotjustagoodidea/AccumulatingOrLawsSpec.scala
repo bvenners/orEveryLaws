@@ -14,13 +14,7 @@ import Gen.oneOf
 import Arbitrary.arbitrary
 import Arbitrary.arbContainer
 
-class AccumulatingOrLawsSpec extends PropSpec with Checkers {
-
-  def checkAll(prefix: String, props: Properties) {
-    for (((name, prop), idx) <- props.properties.zipWithIndex) {
-      property(prefix + idx + ": " + name) { check(prop) }
-    }
-  }
+class AccumulatingOrLawsSpec extends LawsSpec {
 
   implicit def everyArbitrary[E](implicit ae: Arbitrary[E]): Arbitrary[Every[E]] = {
     def oneE: One[E] =
