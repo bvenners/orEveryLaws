@@ -44,23 +44,8 @@ class OrExampleSpec extends WordSpec with Matchers {
         parsePerson("Bridget Jones", "-29") shouldEqual Bad(One("\"-29\" is not a valid age"))
         parsePerson("", "") shouldEqual Bad(Many("\"\" is not a valid name", "\"\" is not a valid integer"))
       }
-      "accumulate with Scalaz's applicative syntax" in {
-        def parsePerson(inputName: String, inputAge: String): Person Or Every[ErrorMessage] = {
-          val name = parseName(inputName)
-          val age = parseAge(inputAge)
-          (name |@| age){ Person(_, _) }
-        }
-  
-        parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
-        parsePerson("Bridget Jones", "") shouldEqual Bad(One("\"\" is not a valid integer"))
-        parsePerson("Bridget Jones", "-29") shouldEqual Bad(One("\"-29\" is not a valid age"))
-        parsePerson("", "") shouldEqual Bad(Many("\"\" is not a valid integer", "\"\" is not a valid name"))
-      }
-      "be able to do short-circuting, monad-like behavior with Scalaz's applicative syntax" in {
+      "by default do short-circuting, monad-like behavior with Scalaz's applicative syntax" in {
      
-        // Make it do monadic applicative by hiding the accumulating implicit
-        def accumulatingOrApplicative[G, B]: Applicative[({type l[g] = g Or Every[B]})#l] = ???
-  
         def parsePerson(inputName: String, inputAge: String): Person Or Every[ErrorMessage] = {
           val name = parseName(inputName)
           val age = parseAge(inputAge)
@@ -72,8 +57,23 @@ class OrExampleSpec extends WordSpec with Matchers {
         parsePerson("Bridget Jones", "-29") shouldEqual Bad(One("\"-29\" is not a valid age"))
         parsePerson("", "") shouldEqual Bad(One("\"\" is not a valid name")) // My but aren't we in a monadic mood today!
       }
-    
+      "be able to accumulate with Scalaz's applicative syntax" in {
+
+        implicit def personality[G, B] = AccumulatingOr.forEvery[G, B]
+
+        def parsePerson(inputName: String, inputAge: String): Person Or Every[ErrorMessage] = {
+          val name = parseName(inputName)
+          val age = parseAge(inputAge)
+          (name |@| age){ Person(_, _) }
+        }
+  
+        parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
+        parsePerson("Bridget Jones", "") shouldEqual Bad(One("\"\" is not a valid integer"))
+        parsePerson("Bridget Jones", "-29") shouldEqual Bad(One("\"-29\" is not a valid age"))
+        parsePerson("", "") shouldEqual Bad(Many("\"\" is not a valid integer", "\"\" is not a valid name"))
+      }
     }
+
     "its Bad type is String" should {
 
       def parseName(input: String): String Or ErrorMessage = {
@@ -107,8 +107,7 @@ class OrExampleSpec extends WordSpec with Matchers {
 
       "be able to accumulate with Scalaz's applicative syntax with the right stimulus" in {
      
-        def orInstances2[B]: Traverse[({type l[g] = g Or B})#l] with Monad[({type l[g] = g Or B})#l] with Cozip[({type l[g] = g Or B})#l] with Plus[({type l[g] = g Or B})#l] = ???
-        implicit def accumulatingOrApplicativeForString: Applicative[({type l[g] = g Or String})#l] = OrInstances.accumulatingOrApplicativeForSemigroup
+        implicit def personality = AccumulatingOr.accumulatingOrApplicativeForSemigroup[String]
 
         def parsePerson(inputName: String, inputAge: String): Person Or ErrorMessage = {
           val name = parseName(inputName)
@@ -155,8 +154,7 @@ class OrExampleSpec extends WordSpec with Matchers {
 
       "be able to accumulate with Scalaz's applicative syntax with the right stimulus" in {
      
-        def orInstances2[B]: Traverse[({type l[g] = g Or B})#l] with Monad[({type l[g] = g Or B})#l] with Cozip[({type l[g] = g Or B})#l] with Plus[({type l[g] = g Or B})#l] = ???
-        implicit def accumulatingOrApplicativeForString: Applicative[({type l[g] = g Or List[String]})#l] = OrInstances.accumulatingOrApplicativeForSemigroup
+        implicit def personality = AccumulatingOr.accumulatingOrApplicativeForSemigroup[List[String]]
 
         def parsePerson(inputName: String, inputAge: String): Person Or List[ErrorMessage] = {
           val name = parseName(inputName)
@@ -172,8 +170,7 @@ class OrExampleSpec extends WordSpec with Matchers {
 
       "be able to accumulate with Scalaz's applicative syntax as a Semigroup" in {
      
-        def orInstances2[B]: Traverse[({type l[g] = g Or B})#l] with Monad[({type l[g] = g Or B})#l] with Cozip[({type l[g] = g Or B})#l] with Plus[({type l[g] = g Or B})#l] = ???
-        implicit def accumulatingOrApplicativeForString[B: Semigroup]: Applicative[({type l[g] = g Or B})#l] = OrInstances.accumulatingOrApplicativeForSemigroup
+        implicit def personality[B: Semigroup] = AccumulatingOr.accumulatingOrApplicativeForSemigroup[B]
 
         def parsePerson(inputName: String, inputAge: String): Person Or List[ErrorMessage] = {
           val name = parseName(inputName)
