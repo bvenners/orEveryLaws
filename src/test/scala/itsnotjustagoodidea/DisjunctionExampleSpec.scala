@@ -26,7 +26,7 @@ import org.scalautils.One
 // monad and an accumulating applicative. We demonstrate it
 // short-circuiting (like a monad) and accumulating with Every, NonEmptyList,
 // String, and List[String]. It's behavior defaults to monadic, but its
-// latent accumulating applicative personality can be broght to the fore 
+// latent accumulating applicative personality can be brought to the fore 
 // with a one-line implicit definition.
 // 
 class DisjunctionExampleSpec extends UnitSpec {

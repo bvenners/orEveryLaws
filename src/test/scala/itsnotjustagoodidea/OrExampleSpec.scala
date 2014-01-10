@@ -25,10 +25,10 @@ import OrInstances._
 //
 // This test suite demonstrates ScalaUtils' Or acting alternatively as a
 // monad and an accumulating applicative, both via its built-in syntax
-// and throgh Scalaz's Monad and Applicative typeclasses. We demonstrate it
+// and through Scalaz's Monad and Applicative typeclasses. We demonstrate it
 // short-circuiting (like a monad) and accumulating with Every, NonEmptyList,
 // String, and List[String]. It's behavior defaults to monadic, but its
-// latent accumulating applicative personality can be broght to the fore 
+// latent accumulating applicative personality can be brought to the fore 
 // with a one-line implicit definition.
 // 
 class OrExampleSpec extends UnitSpec {
