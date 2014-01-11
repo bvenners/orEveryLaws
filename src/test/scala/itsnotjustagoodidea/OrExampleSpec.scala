@@ -39,12 +39,12 @@ class OrExampleSpec extends UnitSpec {
 
     "its Bad type is an Every" should {
 
-      def parseName(input: String): String Or Every[ErrorMessage] = {
+      def parseName(input: String): String Or One[ErrorMessage] = {
         val trimmed = input.trim
         if (!trimmed.isEmpty) Good(trimmed) else Bad(One(s""""${input}" is not a valid name"""))
       }
 
-      def parseAge(input: String): Int Or Every[ErrorMessage] = {
+      def parseAge(input: String): Int Or One[ErrorMessage] = {
         try {
           val age = input.trim.toInt
           if (age >= 0) Good(age) else Bad(One(s""""${age}" is not a valid age"""))
@@ -90,10 +90,16 @@ class OrExampleSpec extends UnitSpec {
         // Hide the monadic personality and establish the accumulating personality with one line
         implicit def personality[G, B] = AccumulatingOr.applicativeForEvery[G, B]
 
+        // This is needed to widen the Bad type from One[T] to Every[T], because otherwise
+        // it doesn't work with Scalaz's applicative builder. (I don't fully understand why yet.)
+        implicit class BadWidener[G, B, EVERY[b] <: Every[b]](or: G Or EVERY[B]) {
+          def toAccEvery: G Or Every[B] = or
+        }
+
         def parsePerson(inputName: String, inputAge: String): Person Or Every[ErrorMessage] = {
           val name = parseName(inputName)
           val age = parseAge(inputAge)
-          (name |@| age){ Person(_, _) }
+          (name.toAccEvery |@| age.toAccEvery){ Person(_, _) }
         }
   
         parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
