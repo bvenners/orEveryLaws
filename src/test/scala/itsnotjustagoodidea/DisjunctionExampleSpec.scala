@@ -37,12 +37,12 @@ class DisjunctionExampleSpec extends UnitSpec {
 
     "its left type is a ScalaUtils' Every" should {
 
-      def parseName(input: String): Every[ErrorMessage] \/ String = {
+      def parseName(input: String): One[ErrorMessage] \/ String = {
         val trimmed = input.trim
         if (!trimmed.isEmpty) \/-(trimmed) else -\/(One(s""""${input}" is not a valid name"""))
       }
 
-      def parseAge(input: String): Every[ErrorMessage] \/ Int = {
+      def parseAge(input: String): One[ErrorMessage] \/ Int = {
         try {
           val age = input.trim.toInt
           if (age >= 0) \/-(age) else -\/(One(s""""${age}" is not a valid age"""))
@@ -78,12 +78,18 @@ class DisjunctionExampleSpec extends UnitSpec {
         // finds this one, it won't look in the companion object.
         implicit def personality[G, B] = AccumulatingDisjunction.applicativeForEvery[G, B]
 
+        // This is needed to widen the Bad type from One[T] to Every[T], because otherwise
+        // it doesn't work with Scalaz's applicative builder. (I don't fully understand why yet.)
+        implicit class BadWidener[G, B, EVERY[b] <: Every[b]](or: EVERY[B] \/ G) {
+          def toAccEvery: Every[B] \/ G = or
+        }
+
         def parsePerson(inputName: String, inputAge: String): Every[ErrorMessage] \/ Person = {
           val name = parseName(inputName)
           val age = parseAge(inputAge)
-          (name |@| age){ Person(_, _) }
+          (name.toAccEvery |@| age.toAccEvery){ Person(_, _) }
         }
-  
+
         parsePerson("Bridget Jones", "29") shouldEqual \/-(Person("Bridget Jones",29))
         parsePerson("Bridget Jones", "") shouldEqual -\/(One("\"\" is not a valid integer"))
         parsePerson("Bridget Jones", "-29") shouldEqual -\/(One("\"-29\" is not a valid age"))
