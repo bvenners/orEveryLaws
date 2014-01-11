@@ -97,7 +97,7 @@ class DisjunctionExampleSpec extends UnitSpec {
       }
     }
 
-    "its left type is NonEmptyList[String]" should {
+    "its left type is NonEmptyList" should {
 
       def parseName(input: String): String \/ String = {
         val trimmed = input.trim
@@ -199,7 +199,7 @@ class DisjunctionExampleSpec extends UnitSpec {
         parsePerson("", "") shouldEqual -\/("\"\" is not a valid integer\"\" is not a valid name") // accumulated here
       }
     }
-    "its left type is List[String]" should {
+    "its left type is List" should {
 
       def parseName(input: String): String \/ String = {
         val trimmed = input.trim

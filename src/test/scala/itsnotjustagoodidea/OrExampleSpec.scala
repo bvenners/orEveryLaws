@@ -109,7 +109,7 @@ class OrExampleSpec extends UnitSpec {
       }
     }
 
-    "its Bad type is NonEmptyList[String]" should {
+    "its Bad type is NonEmptyList" should {
 
       def parseName(input: String): String Or ErrorMessage = {
         val trimmed = input.trim
@@ -211,7 +211,7 @@ class OrExampleSpec extends UnitSpec {
         parsePerson("", "") shouldEqual Bad("\"\" is not a valid integer\"\" is not a valid name") // accumulated here
       }
     }
-    "its Bad type is List[String]" should {
+    "its Bad type is List" should {
 
       def parseName(input: String): String Or ErrorMessage = {
         val trimmed = input.trim
