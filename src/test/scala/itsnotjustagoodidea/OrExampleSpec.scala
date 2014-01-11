@@ -111,12 +111,12 @@ class OrExampleSpec extends UnitSpec {
 
     "its Bad type is NonEmptyList[String]" should {
 
-      def parseName(input: String): String Or String = {
+      def parseName(input: String): String Or ErrorMessage = {
         val trimmed = input.trim
         if (!trimmed.isEmpty) Good(trimmed) else Bad(s""""${input}" is not a valid name""")
       }
 
-      def parseAge(input: String): Int Or String = {
+      def parseAge(input: String): Int Or ErrorMessage = {
         try {
           val age = input.trim.toInt
           if (age >= 0) Good(age) else Bad(s""""${age}" is not a valid age""")
@@ -133,7 +133,7 @@ class OrExampleSpec extends UnitSpec {
 
       "by default exhibit short-circuting, monad-like behavior with Scalaz's applicative syntax" in {
   
-        def parsePerson(inputName: String, inputAge: String): Person Or NonEmptyList[String] = {
+        def parsePerson(inputName: String, inputAge: String): Person Or NonEmptyList[ErrorMessage] = {
           val name = parseName(inputName)
           val age = parseAge(inputAge)
           (name.toAccNel |@| age.toAccNel){ Person(_, _) }
@@ -148,9 +148,9 @@ class OrExampleSpec extends UnitSpec {
       "be able to accumulate with Scalaz's applicative syntax via an alternate personality" in {
      
         // Hide the monadic personality and establish the accumulating personality with one line
-        implicit def personality = AccumulatingOr.applicativeFor[NonEmptyList[String]]
+        implicit def personality = AccumulatingOr.applicativeFor[NonEmptyList[ErrorMessage]]
 
-        def parsePerson(inputName: String, inputAge: String): Person Or NonEmptyList[String] = {
+        def parsePerson(inputName: String, inputAge: String): Person Or NonEmptyList[ErrorMessage] = {
           val name = parseName(inputName)
           val age = parseAge(inputAge)
           (name.toAccNel |@| age.toAccNel){ Person(_, _) }
@@ -197,7 +197,7 @@ class OrExampleSpec extends UnitSpec {
       "be able to accumulate with Scalaz's applicative syntax via an alternate personality" in {
      
         // Hide the monadic personality and establish the accumulating personality with one line
-        implicit def personality = AccumulatingOr.applicativeFor[String]
+        implicit def personality = AccumulatingOr.applicativeFor[ErrorMessage]
 
         def parsePerson(inputName: String, inputAge: String): Person Or ErrorMessage = {
           val name = parseName(inputName)
@@ -250,7 +250,7 @@ class OrExampleSpec extends UnitSpec {
       "be able to accumulate with Scalaz's applicative syntax via an alternate personality" in {
 
         // Hide the monadic personality and establish the accumulating personality with one line
-        implicit def personality = AccumulatingOr.applicativeFor[List[String]]
+        implicit def personality = AccumulatingOr.applicativeFor[List[ErrorMessage]]
 
         def parsePerson(inputName: String, inputAge: String): Person Or List[ErrorMessage] = {
           val name = parseName(inputName)
