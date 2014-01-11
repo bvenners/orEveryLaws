@@ -99,12 +99,12 @@ class DisjunctionExampleSpec extends UnitSpec {
 
     "its left type is NonEmptyList[String]" should {
 
-      def parseName(input: String): String \/ String = {
+      def parseName(input: String): ErrorMessage \/ String = {
         val trimmed = input.trim
         if (!trimmed.isEmpty) \/-(trimmed) else -\/(s""""${input}" is not a valid name""")
       }
 
-      def parseAge(input: String): String \/ Int = {
+      def parseAge(input: String): ErrorMessage \/ Int = {
         try {
           val age = input.trim.toInt
           if (age >= 0) \/-(age) else -\/(s""""${age}" is not a valid age""")
@@ -121,7 +121,7 @@ class DisjunctionExampleSpec extends UnitSpec {
 
       "by default exhibit short-circuting, monad-like behavior with Scalaz's applicative syntax" in {
  
-        def parsePerson(inputName: String, inputAge: String): NonEmptyList[String] \/ Person = {
+        def parsePerson(inputName: String, inputAge: String): NonEmptyList[ErrorMessage] \/ Person = {
           val name = parseName(inputName)
           val age = parseAge(inputAge)
           (name.toAccNel |@| age.toAccNel){ Person(_, _) }
@@ -201,19 +201,24 @@ class DisjunctionExampleSpec extends UnitSpec {
     }
     "its left type is List[String]" should {
 
-      def parseName(input: String): List[ErrorMessage] \/ String = {
+      def parseName(input: String): ErrorMessage \/ String = {
         val trimmed = input.trim
-        if (!trimmed.isEmpty) \/-(trimmed) else -\/(List(s""""${input}" is not a valid name"""))
+        if (!trimmed.isEmpty) \/-(trimmed) else -\/(s""""${input}" is not a valid name""")
       }
 
-      def parseAge(input: String): List[ErrorMessage] \/ Int = {
+      def parseAge(input: String): ErrorMessage \/ Int = {
         try {
           val age = input.trim.toInt
-          if (age >= 0) \/-(age) else -\/(List(s""""${age}" is not a valid age"""))
+          if (age >= 0) \/-(age) else -\/(s""""${age}" is not a valid age""")
         }
         catch {
-          case _: NumberFormatException => -\/(List(s""""${input}" is not a valid integer"""))
+          case _: NumberFormatException => -\/(s""""${input}" is not a valid integer""")
         }
+      }
+
+      // This is needed to lift the left type from T to List[T]
+      implicit class LeftLifter[G, B](disjunction: B \/ G) {
+        def toAccList: List[B] \/ G = disjunction.leftMap(List(_))
       }
 
       "by default exhibit short-circuting, monad-like behavior with Scalaz's applicative syntax" in {
@@ -221,7 +226,7 @@ class DisjunctionExampleSpec extends UnitSpec {
         def parsePerson(inputName: String, inputAge: String): List[ErrorMessage] \/ Person = {
           val name = parseName(inputName)
           val age = parseAge(inputAge)
-          (name |@| age){ Person(_, _) }
+          (name.toAccList |@| age.toAccList){ Person(_, _) }
         }
   
         parsePerson("Bridget Jones", "29") shouldEqual \/-(Person("Bridget Jones",29))
@@ -238,7 +243,7 @@ class DisjunctionExampleSpec extends UnitSpec {
         def parsePerson(inputName: String, inputAge: String): List[ErrorMessage] \/ Person = {
           val name = parseName(inputName)
           val age = parseAge(inputAge)
-          (name |@| age){ Person(_, _) }
+          (name.toAccList |@| age.toAccList){ Person(_, _) }
         }
   
         parsePerson("Bridget Jones", "29") shouldEqual \/-(Person("Bridget Jones",29))
@@ -260,7 +265,7 @@ class DisjunctionExampleSpec extends UnitSpec {
         def parsePerson(inputName: String, inputAge: String): List[ErrorMessage] \/ Person = {
           val name = parseName(inputName)
           val age = parseAge(inputAge)
-          (name |@| age){ Person(_, _) }
+          (name.toAccList |@| age.toAccList){ Person(_, _) }
         }
   
         parsePerson("Bridget Jones", "29") shouldEqual \/-(Person("Bridget Jones",29))

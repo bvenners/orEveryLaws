@@ -127,7 +127,7 @@ class OrExampleSpec extends UnitSpec {
       }
 
       // This is needed to lift the Bad type from T to NonEmptyList[T]
-      implicit class BadWidener[G, B](or: G Or B) {
+      implicit class BadLifter[G, B](or: G Or B) {
         def toAccNel: G Or NonEmptyList[B] = or.badMap(NonEmptyList(_))
       }
 
@@ -213,29 +213,34 @@ class OrExampleSpec extends UnitSpec {
     }
     "its Bad type is List[String]" should {
 
-      def parseName(input: String): String Or List[ErrorMessage] = {
+      def parseName(input: String): String Or ErrorMessage = {
         val trimmed = input.trim
-        if (!trimmed.isEmpty) Good(trimmed) else Bad(List(s""""${input}" is not a valid name"""))
+        if (!trimmed.isEmpty) Good(trimmed) else Bad(s""""${input}" is not a valid name""")
       }
 
-      def parseAge(input: String): Int Or List[ErrorMessage] = {
+      def parseAge(input: String): Int Or ErrorMessage = {
         try {
           val age = input.trim.toInt
-          if (age >= 0) Good(age) else Bad(List(s""""${age}" is not a valid age"""))
+          if (age >= 0) Good(age) else Bad(s""""${age}" is not a valid age""")
         }
         catch {
-          case _: NumberFormatException => Bad(List(s""""${input}" is not a valid integer"""))
+          case _: NumberFormatException => Bad(s""""${input}" is not a valid integer""")
         }
+      }
+
+      // This is needed to lift the Bad type from T to List[T]
+      implicit class BadLifter[G, B](or: G Or B) {
+        def toAccList: G Or List[B] = or.badMap(List(_))
       }
 
       "by default exhibit short-circuting, monad-like behavior with Scalaz's applicative syntax" in {
-     
+
         def parsePerson(inputName: String, inputAge: String): Person Or List[ErrorMessage] = {
           val name = parseName(inputName)
           val age = parseAge(inputAge)
-          (name |@| age){ Person(_, _) }
+          (name.toAccList |@| age.toAccList){ Person(_, _) }
         }
-  
+
         parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
         parsePerson("Bridget Jones", "") shouldEqual Bad(List("\"\" is not a valid integer"))
         parsePerson("Bridget Jones", "-29") shouldEqual Bad(List("\"-29\" is not a valid age"))
@@ -243,14 +248,14 @@ class OrExampleSpec extends UnitSpec {
       }
 
       "be able to accumulate with Scalaz's applicative syntax via an alternate personality" in {
-     
+
         // Hide the monadic personality and establish the accumulating personality with one line
         implicit def personality = AccumulatingOr.applicativeFor[List[String]]
 
         def parsePerson(inputName: String, inputAge: String): Person Or List[ErrorMessage] = {
           val name = parseName(inputName)
           val age = parseAge(inputAge)
-          (name |@| age){ Person(_, _) }
+          (name.toAccList |@| age.toAccList){ Person(_, _) }
         }
   
         parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
@@ -272,7 +277,7 @@ class OrExampleSpec extends UnitSpec {
         def parsePerson(inputName: String, inputAge: String): Person Or List[ErrorMessage] = {
           val name = parseName(inputName)
           val age = parseAge(inputAge)
-          (name |@| age){ Person(_, _) }
+          (name.toAccList |@| age.toAccList){ Person(_, _) }
         }
   
         parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
