@@ -78,9 +78,9 @@ class DisjunctionExampleSpec extends UnitSpec {
         // finds this one, it won't look in the companion object.
         implicit def personality[G, B] = AccumulatingDisjunction.applicativeForEvery[G, B]
 
-        // This is needed to widen the Bad type from One[T] to Every[T], because otherwise
+        // This is needed to widen the left type from One[T] to Every[T], because otherwise
         // it doesn't work with Scalaz's applicative builder. (I don't fully understand why yet.)
-        implicit class BadWidener[G, B, EVERY[b] <: Every[b]](or: EVERY[B] \/ G) {
+        implicit class LeftWidener[G, B, EVERY[b] <: Every[b]](or: EVERY[B] \/ G) {
           def toAccEvery: Every[B] \/ G = or
         }
 
@@ -99,27 +99,32 @@ class DisjunctionExampleSpec extends UnitSpec {
 
     "its left type is NonEmptyList[String]" should {
 
-      def parseName(input: String): NonEmptyList[String] \/ String = {
+      def parseName(input: String): String \/ String = {
         val trimmed = input.trim
-        if (!trimmed.isEmpty) \/-(trimmed) else -\/(NonEmptyList(s""""${input}" is not a valid name"""))
+        if (!trimmed.isEmpty) \/-(trimmed) else -\/(s""""${input}" is not a valid name""")
       }
 
-      def parseAge(input: String): NonEmptyList[String] \/ Int = {
+      def parseAge(input: String): String \/ Int = {
         try {
           val age = input.trim.toInt
-          if (age >= 0) \/-(age) else -\/(NonEmptyList(s""""${age}" is not a valid age"""))
+          if (age >= 0) \/-(age) else -\/(s""""${age}" is not a valid age""")
         }
         catch {
-          case _: NumberFormatException => -\/(NonEmptyList(s""""${input}" is not a valid integer"""))
+          case _: NumberFormatException => -\/(s""""${input}" is not a valid integer""")
         }
+      }
+
+      // This is needed to lift the left type from T to NonEmptyList[T]
+      implicit class LeftWidener[G, B](disjunction: B \/ G) {
+        def toAccNel: NonEmptyList[B] \/ G = disjunction.leftMap(NonEmptyList(_))
       }
 
       "by default exhibit short-circuting, monad-like behavior with Scalaz's applicative syntax" in {
-     
+ 
         def parsePerson(inputName: String, inputAge: String): NonEmptyList[String] \/ Person = {
           val name = parseName(inputName)
           val age = parseAge(inputAge)
-          (name |@| age){ Person(_, _) }
+          (name.toAccNel |@| age.toAccNel){ Person(_, _) }
         }
   
         parsePerson("Bridget Jones", "29") shouldEqual \/-(Person("Bridget Jones",29))
@@ -129,16 +134,16 @@ class DisjunctionExampleSpec extends UnitSpec {
       }
 
       "be able to accumulate with Scalaz's applicative syntax via an alternate personality" in {
-     
+
         // Overpower the monadic personality and establish the accumulating personality with one line
         implicit def personality = AccumulatingDisjunction.applicativeFor[NonEmptyList[String]]
 
         def parsePerson(inputName: String, inputAge: String): NonEmptyList[String] \/ Person = {
           val name = parseName(inputName)
           val age = parseAge(inputAge)
-          (name |@| age){ Person(_, _) }
+          (name.toAccNel |@| age.toAccNel){ Person(_, _) }
         }
-  
+
         parsePerson("Bridget Jones", "29") shouldEqual \/-(Person("Bridget Jones",29))
         parsePerson("Bridget Jones", "") shouldEqual -\/(NonEmptyList("\"\" is not a valid integer"))
         parsePerson("Bridget Jones", "-29") shouldEqual -\/(NonEmptyList("\"-29\" is not a valid age"))

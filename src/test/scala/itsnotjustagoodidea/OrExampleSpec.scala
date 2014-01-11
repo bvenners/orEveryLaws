@@ -111,27 +111,32 @@ class OrExampleSpec extends UnitSpec {
 
     "its Bad type is NonEmptyList[String]" should {
 
-      def parseName(input: String): String Or NonEmptyList[String] = {
+      def parseName(input: String): String Or String = {
         val trimmed = input.trim
-        if (!trimmed.isEmpty) Good(trimmed) else Bad(NonEmptyList(s""""${input}" is not a valid name"""))
+        if (!trimmed.isEmpty) Good(trimmed) else Bad(s""""${input}" is not a valid name""")
       }
 
-      def parseAge(input: String): Int Or NonEmptyList[String] = {
+      def parseAge(input: String): Int Or String = {
         try {
           val age = input.trim.toInt
-          if (age >= 0) Good(age) else Bad(NonEmptyList(s""""${age}" is not a valid age"""))
+          if (age >= 0) Good(age) else Bad(s""""${age}" is not a valid age""")
         }
         catch {
-          case _: NumberFormatException => Bad(NonEmptyList(s""""${input}" is not a valid integer"""))
+          case _: NumberFormatException => Bad(s""""${input}" is not a valid integer""")
         }
+      }
+
+      // This is needed to lift the Bad type from T to NonEmptyList[T]
+      implicit class BadWidener[G, B](or: G Or B) {
+        def toAccNel: G Or NonEmptyList[B] = or.badMap(NonEmptyList(_))
       }
 
       "by default exhibit short-circuting, monad-like behavior with Scalaz's applicative syntax" in {
-     
+  
         def parsePerson(inputName: String, inputAge: String): Person Or NonEmptyList[String] = {
           val name = parseName(inputName)
           val age = parseAge(inputAge)
-          (name |@| age){ Person(_, _) }
+          (name.toAccNel |@| age.toAccNel){ Person(_, _) }
         }
   
         parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
@@ -148,7 +153,7 @@ class OrExampleSpec extends UnitSpec {
         def parsePerson(inputName: String, inputAge: String): Person Or NonEmptyList[String] = {
           val name = parseName(inputName)
           val age = parseAge(inputAge)
-          (name |@| age){ Person(_, _) }
+          (name.toAccNel |@| age.toAccNel){ Person(_, _) }
         }
   
         parsePerson("Bridget Jones", "29") shouldEqual Good(Person("Bridget Jones",29))
