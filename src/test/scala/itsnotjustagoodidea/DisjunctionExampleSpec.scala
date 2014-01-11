@@ -115,7 +115,7 @@ class DisjunctionExampleSpec extends UnitSpec {
       }
 
       // This is needed to lift the left type from T to NonEmptyList[T]
-      implicit class LeftWidener[G, B](disjunction: B \/ G) {
+      implicit class LeftLifter[G, B](disjunction: B \/ G) {
         def toAccNel: NonEmptyList[B] \/ G = disjunction.leftMap(NonEmptyList(_))
       }
 
